@@ -42,6 +42,11 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          cyan: "hsl(var(--accent-cyan))",
+          purple: "hsl(var(--accent-purple))",
+          blue: "hsl(var(--accent-blue))",
+          glow: "hsl(var(--accent-glow))",
+          "glow-purple": "hsl(var(--accent-glow-purple))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -50,18 +55,14 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-          elevated: "hsl(var(--card-elevated))",
+          glass: "hsl(var(--card-glass))",
           border: "hsl(var(--card-border))",
+          "border-hover": "hsl(var(--card-border-hover))",
         },
-        "hero-gradient": {
-          from: "hsl(var(--hero-gradient-from))",
-          via: "hsl(var(--hero-gradient-via))",
-          to: "hsl(var(--hero-gradient-to))",
+        "text-gradient": {
+          from: "hsl(var(--text-gradient-from))",
+          to: "hsl(var(--text-gradient-to))",
         },
-        "accent-glow": "hsl(var(--accent-glow))",
-        "accent-soft": "hsl(var(--accent-soft))",
-        "text-body": "hsl(var(--text-body))",
-        "text-muted": "hsl(var(--text-muted))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,43 +71,45 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
         "fade-in": {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
         "fade-in-up": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(20px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
+          "0%": { opacity: "0", transform: "translateY(30px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "glow-pulse": {
+          "0%, 100%": { opacity: "0.3", boxShadow: "0 0 20px hsl(var(--accent-glow))" },
+          "50%": { opacity: "0.6", boxShadow: "0 0 40px hsl(var(--accent-glow)), 0 0 60px hsl(var(--accent-glow-purple))" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
+        },
+        "grid-flow": {
+          "0%": { backgroundPosition: "0 0" },
+          "100%": { backgroundPosition: "50px 50px" },
+        },
+        "pulse-glow": {
           "0%, 100%": {
             opacity: "1",
-            filter: "brightness(1)",
+            boxShadow: "0 0 20px hsl(var(--accent-glow)), 0 0 40px hsl(var(--accent-glow))",
           },
           "50%": {
             opacity: "0.8",
-            filter: "brightness(1.2)",
+            boxShadow: "0 0 30px hsl(var(--accent-glow)), 0 0 60px hsl(var(--accent-glow)), 0 0 80px hsl(var(--accent-glow-purple))",
           },
         },
       },
@@ -115,7 +118,12 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.6s ease-out",
         "fade-in-up": "fade-in-up 0.6s ease-out",
-        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+        "float": "float 6s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
+        "grid-flow": "grid-flow 20s linear infinite",
+        "spin-slow": "spin 20s linear infinite",
+        "pulse-glow": "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

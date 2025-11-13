@@ -8,50 +8,64 @@ import {
   Briefcase,
   TrendingUp,
   Shield,
-  Zap
+  Zap,
+  Brain,
+  Sparkles
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const universityFeatures = [
-  { icon: Users, text: "Recruiter Management & Verification" },
-  { icon: Calendar, text: "Placement Drives Management" },
-  { icon: BarChart3, text: "Analytics & Reports Dashboard" },
-  { icon: FileText, text: "Pre-Fixed Templates for Emails & Docs" },
-  { icon: MessageSquare, text: "Student Notifications & Tracking" },
-  { icon: Shield, text: "Compliance & Documentation" },
+  { icon: Brain, text: "AI-Powered Recruiter Verification", tag: "AI" },
+  { icon: Calendar, text: "Intelligent Drive Scheduling", tag: "Automated" },
+  { icon: BarChart3, text: "Predictive Analytics Dashboard", tag: "ML" },
+  { icon: FileText, text: "Smart Document Generation", tag: "AI" },
+  { icon: Sparkles, text: "Real-Time Student Insights", tag: "Live" },
+  { icon: Shield, text: "Automated Compliance Tracking", tag: "Auto" },
 ];
 
 const recruiterFeatures = [
-  { icon: Briefcase, text: "Job Posting Portal" },
-  { icon: CheckCircle2, text: "Application Evaluation & Shortlisting" },
-  { icon: Calendar, text: "Interview Scheduling" },
-  { icon: MessageSquare, text: "Communication Portal with WhatsApp" },
-  { icon: TrendingUp, text: "Post-Placement Tracking" },
-  { icon: BarChart3, text: "Reports & Analytics" },
+  { icon: Briefcase, text: "AI Job-Candidate Matching", tag: "AI" },
+  { icon: Brain, text: "Neural Resume Screening", tag: "ML" },
+  { icon: Calendar, text: "Smart Interview Scheduling", tag: "Auto" },
+  { icon: MessageSquare, text: "AI Communication Assistant", tag: "AI" },
+  { icon: TrendingUp, text: "Predictive Hiring Analytics", tag: "ML" },
+  { icon: Zap, text: "Real-Time Candidate Scoring", tag: "Live" },
 ];
 
 const studentFeatures = [
-  { icon: Briefcase, text: "Active Job Listings Dashboard" },
-  { icon: FileText, text: "Resume Builder & Portfolio Creation" },
-  { icon: TrendingUp, text: "Application Tracking" },
-  { icon: Zap, text: "AI-Powered Recommendations" },
-  { icon: Calendar, text: "Interview Preparation" },
-  { icon: Shield, text: "Offer Letter & Acknowledgement Portal" },
+  { icon: Sparkles, text: "Personalized Job Recommendations", tag: "AI" },
+  { icon: FileText, text: "AI Resume Optimization", tag: "AI" },
+  { icon: Brain, text: "ML-Powered Interview Prep", tag: "ML" },
+  { icon: Zap, text: "Intelligent Skill Gap Analysis", tag: "AI" },
+  { icon: TrendingUp, text: "Career Path Predictions", tag: "ML" },
+  { icon: Shield, text: "Auto Application Tracking", tag: "Auto" },
 ];
 
 const FeatureList = ({ features }: { features: typeof universityFeatures }) => (
-  <div className="grid md:grid-cols-2 gap-6">
+  <div className="grid md:grid-cols-2 gap-4">
     {features.map((feature, index) => {
       const Icon = feature.icon;
       return (
         <div 
           key={index} 
-          className="flex items-start gap-4 p-4 rounded-xl hover:bg-card-elevated transition-colors duration-300"
+          className="group flex items-start gap-4 p-5 rounded-2xl bg-card/30 backdrop-blur-sm border border-card-border hover:border-card-border-hover transition-all duration-300 hover:scale-[1.02]"
         >
-          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-            <Icon className="w-5 h-5 text-accent" />
+          <div className="relative">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple p-0.5">
+              <div className="w-full h-full rounded-xl bg-card flex items-center justify-center">
+                <Icon className="w-6 h-6 text-accent-cyan group-hover:scale-110 transition-transform" />
+              </div>
+            </div>
+            <div className="absolute inset-0 blur-lg bg-accent-glow/30 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-          <p className="text-foreground font-medium pt-2">{feature.text}</p>
+          <div className="flex-1 pt-1">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-foreground font-semibold">{feature.text}</p>
+              <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30">
+                {feature.tag}
+              </span>
+            </div>
+          </div>
         </div>
       );
     })}
@@ -60,63 +74,77 @@ const FeatureList = ({ features }: { features: typeof universityFeatures }) => (
 
 export const Features = () => {
   return (
-    <section className="py-24 bg-muted/30">
-      <div className="container mx-auto px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="font-heading text-4xl lg:text-5xl font-bold mb-6 text-foreground">
-            Built for Universities, Loved by Students,
-            <span className="text-accent"> Trusted by Recruiters</span>
+    <section className="py-32 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-glow-purple/15 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-glow/15 rounded-full blur-[150px]" />
+      </div>
+
+      <div className="container mx-auto px-6 lg:px-8 relative z-10">
+        <div className="max-w-4xl mx-auto text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-card/40 backdrop-blur-xl border border-card-border-hover">
+            <Zap className="w-4 h-4 text-accent-cyan animate-pulse" />
+            <span className="text-sm font-semibold text-accent-cyan">AI-First Features</span>
+          </div>
+          
+          <h2 className="font-heading text-5xl lg:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-accent-cyan via-accent-purple to-accent-blue bg-clip-text text-transparent">
+              Intelligent Features
+            </span>
+            <br />
+            <span className="text-foreground">For Every Role</span>
           </h2>
-          <p className="text-lg text-text-muted">
-            Comprehensive features designed for every stakeholder in the placement ecosystem
+          <p className="text-xl text-muted-foreground">
+            Every feature powered by machine learning and artificial intelligence
           </p>
         </div>
 
         <div className="max-w-6xl mx-auto">
           <Tabs defaultValue="universities" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-12 h-auto p-1 bg-card border border-card-border">
+            <TabsList className="grid w-full grid-cols-3 max-w-3xl mx-auto mb-16 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-card-border rounded-2xl">
               <TabsTrigger 
                 value="universities" 
-                className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground py-3 rounded-lg font-semibold"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent-cyan data-[state=active]:to-accent-blue data-[state=active]:text-primary-foreground py-4 rounded-xl font-bold text-base transition-all duration-300"
               >
                 Universities
               </TabsTrigger>
               <TabsTrigger 
                 value="recruiters"
-                className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground py-3 rounded-lg font-semibold"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent-purple data-[state=active]:to-accent-cyan data-[state=active]:text-primary-foreground py-4 rounded-xl font-bold text-base transition-all duration-300"
               >
                 Recruiters
               </TabsTrigger>
               <TabsTrigger 
                 value="students"
-                className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground py-3 rounded-lg font-semibold"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent-blue data-[state=active]:to-accent-purple data-[state=active]:text-primary-foreground py-4 rounded-xl font-bold text-base transition-all duration-300"
               >
                 Students
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="universities" className="mt-8">
-              <div className="bg-card rounded-2xl p-8 border border-card-border shadow-lg">
-                <h3 className="font-heading text-2xl font-bold mb-6 text-foreground">
-                  University Placement Cell Features
+            <TabsContent value="universities" className="mt-0">
+              <div className="p-10 rounded-3xl bg-card/40 backdrop-blur-xl border border-card-border-hover">
+                <h3 className="font-heading text-3xl font-bold mb-8 bg-gradient-to-r from-accent-cyan to-accent-blue bg-clip-text text-transparent">
+                  AI-Enhanced University Tools
                 </h3>
                 <FeatureList features={universityFeatures} />
               </div>
             </TabsContent>
 
-            <TabsContent value="recruiters" className="mt-8">
-              <div className="bg-card rounded-2xl p-8 border border-card-border shadow-lg">
-                <h3 className="font-heading text-2xl font-bold mb-6 text-foreground">
-                  Recruiter & Company Features
+            <TabsContent value="recruiters" className="mt-0">
+              <div className="p-10 rounded-3xl bg-card/40 backdrop-blur-xl border border-card-border-hover">
+                <h3 className="font-heading text-3xl font-bold mb-8 bg-gradient-to-r from-accent-purple to-accent-cyan bg-clip-text text-transparent">
+                  Intelligent Recruiter Platform
                 </h3>
                 <FeatureList features={recruiterFeatures} />
               </div>
             </TabsContent>
 
-            <TabsContent value="students" className="mt-8">
-              <div className="bg-card rounded-2xl p-8 border border-card-border shadow-lg">
-                <h3 className="font-heading text-2xl font-bold mb-6 text-foreground">
-                  Student Dashboard Features
+            <TabsContent value="students" className="mt-0">
+              <div className="p-10 rounded-3xl bg-card/40 backdrop-blur-xl border border-card-border-hover">
+                <h3 className="font-heading text-3xl font-bold mb-8 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+                  Smart Student Experience
                 </h3>
                 <FeatureList features={studentFeatures} />
               </div>
