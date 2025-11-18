@@ -166,16 +166,15 @@ const ResumeBuilder = () => {
       console.log('Upload mutation success data:', data);
       
       // Handle parsed data if available
-      if (data?.resume?.extracted_data) {
-        const extractedData = data.resume.extracted_data;
+      const extractedData = data?.resume?.extracted_data || data?.extracted_data;
+      if (extractedData) {
         console.log('Parsed resume data:', extractedData);
-        
-        // Fill form fields with extracted data
         fillFormWithParsedData(extractedData);
         
         // Show completion percentage
-        if (data.resume.completion_percentage) {
-          toast.success(`Resume ${data.resume.completion_percentage}% complete`);
+        const completion = data?.resume?.completion_percentage || data?.completion_percentage;
+        if (completion) {
+          toast.success(`Resume ${completion}% complete`);
         }
       } else {
         console.log('No extracted data found in response:', data);

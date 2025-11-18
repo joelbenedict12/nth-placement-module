@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { demoJobs, demoApplications, demoResumes, demoInterviews, demoDocuments } from '@/demo/demoData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -245,16 +244,9 @@ export const resumeAPI = {
     try {
       const response = await api.post('/resumes/generate', data);
       return response.data;
-    } catch (error) {
-      console.log('Using demo resume generation data');
-      return {
-        id: Math.floor(Math.random() * 1000),
-        fileName: 'generated_resume.pdf',
-        fileUrl: '/uploads/generated_resume.pdf',
-        aiGenerated: true,
-        status: 'completed',
-        createdAt: new Date().toISOString()
-      };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate resume';
+      throw new Error(errorMessage);
     }
   },
 
@@ -262,9 +254,9 @@ export const resumeAPI = {
     try {
       const response = await api.delete(`/resumes/${id}`);
       return response.data;
-    } catch (error) {
-      console.log('Using demo resume deletion data');
-      return { message: 'Resume deleted successfully' };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete resume';
+      throw new Error(errorMessage);
     }
   },
 };
@@ -275,9 +267,9 @@ export const jobAPI = {
     try {
       const response = await api.get('/jobs', { params });
       return response.data;
-    } catch (error) {
-      console.log('Using demo jobs data');
-      return demoJobs;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch jobs';
+      throw new Error(errorMessage);
     }
   },
 
@@ -285,13 +277,9 @@ export const jobAPI = {
     try {
       const response = await api.get('/jobs/matches');
       return response.data;
-    } catch (error) {
-      console.log('Using demo job matches data');
-      return demoJobs.map(job => ({
-        ...job,
-        matchScore: Math.floor(Math.random() * 30) + 70,
-        matchReasons: ['Skills match', 'Location preference', 'Experience level']
-      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch job matches';
+      throw new Error(errorMessage);
     }
   },
 
@@ -299,9 +287,9 @@ export const jobAPI = {
     try {
       const response = await api.get(`/jobs/${id}`);
       return response.data;
-    } catch (error) {
-      console.log('Using demo job data');
-      return demoJobs.find(job => job.id === id) || demoJobs[0];
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch job';
+      throw new Error(errorMessage);
     }
   },
 
@@ -309,14 +297,9 @@ export const jobAPI = {
     try {
       const response = await api.post('/jobs/apply', { jobId });
       return response.data;
-    } catch (error) {
-      console.log('Using demo application data');
-      return {
-        id: Math.floor(Math.random() * 1000),
-        jobId,
-        status: 'submitted',
-        appliedAt: new Date().toISOString()
-      };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to apply for job';
+      throw new Error(errorMessage);
     }
   },
 
@@ -324,9 +307,9 @@ export const jobAPI = {
     try {
       const response = await api.get('/jobs/applications');
       return response.data;
-    } catch (error) {
-      console.log('Using demo applications data');
-      return demoApplications;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch applications';
+      throw new Error(errorMessage);
     }
   },
 };
