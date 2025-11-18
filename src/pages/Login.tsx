@@ -1,10 +1,12 @@
-import { useMemo, type ComponentType, type SVGProps } from "react";
+import { useMemo, type ComponentType, type SVGProps, useState } from "react";
 import { GraduationCap, Building2, Briefcase, ArrowRight, ShieldCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 
 type RoleKey = "student" | "university" | "recruiter";
 
@@ -58,11 +60,41 @@ const roles: RoleConfig[] = [
 
 const RoleLoginForm = ({ role }: { role: RoleConfig }) => {
   const Icon = role.icon;
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
   const groupedFields = useMemo(() => {
     const [primary, ...rest] = role.fields;
     return { primary, secondary: rest };
   }, [role.fields]);
+
+  const handleInputChange = (fieldId: string, value: string) => {
+    setFormData(prev => ({ ...prev, [fieldId]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Extract email and password from form data
+      const email = formData.email || formData.studentId || formData.institutionCode || formData.companyCode;
+      const password = formData.password;
+
+      if (!email || !password) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      await login(email, password);
+      navigate('/student');
+    } catch (error) {
+      console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] items-start">
@@ -79,10 +111,7 @@ const RoleLoginForm = ({ role }: { role: RoleConfig }) => {
 
         <form
           className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            // TODO: integrate with backend auth flow
-          }}
+          onSubmit={handleSubmit}
         >
           <div className="space-y-4">
             {[groupedFields.primary, ...groupedFields.secondary].map((field) => (
@@ -96,6 +125,8 @@ const RoleLoginForm = ({ role }: { role: RoleConfig }) => {
                   placeholder={field.placeholder}
                   required
                   className="border-white/15 bg-black/60 text-white placeholder:text-white/40 focus-visible:ring-accent-cyan"
+                  value={formData[field.id] || ''}
+                  onChange={(e) => handleInputChange(field.id, e.target.value)}
                 />
               </div>
             ))}
@@ -116,17 +147,22 @@ const RoleLoginForm = ({ role }: { role: RoleConfig }) => {
 
           <Button
             type="submit"
-            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent-cyan to-accent-purple py-6 text-lg font-semibold text-white shadow-lg shadow-accent-glow/20 transition-all hover:shadow-xl hover:shadow-accent-glow/30"
+            disabled={isLoading}
+            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent-cyan to-accent-purple py-6 text-lg font-semibold text-white shadow-lg shadow-accent-glow/20 transition-all hover:shadow-xl hover:shadow-accent-glow/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign in
+            {isLoading ? 'Signing in...' : 'Sign in'}
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Button>
 
           <p className="text-center text-sm text-white/60">
             New to Nth Place?{" "}
-            <a href="#" className="font-semibold text-accent-cyan hover:text-accent-cyan/80">
-              Request onboarding access
-            </a>
+            <button 
+              type="button"
+              onClick={() => navigate('/register')}
+              className="font-semibold text-accent-cyan hover:text-accent-cyan/80"
+            >
+              Create an account
+            </button>
           </p>
         </form>
       </div>

@@ -1,5 +1,8 @@
-import { BadgeCheck, Download, Plus, Sparkles, Upload } from "lucide-react";
+import { BadgeCheck, Download, Plus, Sparkles, Upload, FileText, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +10,291 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { resumeAPI, Resume } from "@/services/api";
+import { toast } from "sonner";
 
 const ResumeBuilder = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const { token, isLoading: isAuthLoading } = useAuth();
+  const isAuthenticated = !!token;
+
+  // Form state for resume data
+  const [resumeData, setResumeData] = useState({
+    personalInfo: {
+      fullName: '',
+      email: '',
+      phone: '',
+      location: '',
+      portfolio: ''
+    },
+    summary: '',
+    education: [],
+    experience: [],
+    skills: {
+      technical: '',
+      analytics: '',
+      collaboration: ''
+    },
+    projects: [],
+    achievements: ''
+  });
+
+  // State to track which fields were auto-filled
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+
+  // Function to fill form with parsed resume data
+  const fillFormWithParsedData = (extractedData: any) => {
+    if (!extractedData) return;
+
+    const newResumeData = { ...resumeData };
+    const newAutoFilledFields = new Set<string>();
+
+    // Fill personal info
+    if (extractedData.personal_info) {
+      if (extractedData.personal_info.full_name) {
+        newResumeData.personalInfo.fullName = extractedData.personal_info.full_name;
+        newAutoFilledFields.add('fullName');
+      }
+      if (extractedData.personal_info.email) {
+        newResumeData.personalInfo.email = extractedData.personal_info.email;
+        newAutoFilledFields.add('email');
+      }
+      if (extractedData.personal_info.phone) {
+        newResumeData.personalInfo.phone = extractedData.personal_info.phone;
+        newAutoFilledFields.add('phone');
+      }
+      if (extractedData.personal_info.location) {
+        newResumeData.personalInfo.location = extractedData.personal_info.location;
+        newAutoFilledFields.add('location');
+      }
+      if (extractedData.personal_info.linkedin_url || extractedData.personal_info.github_url) {
+        newResumeData.personalInfo.portfolio = extractedData.personal_info.linkedin_url || extractedData.personal_info.github_url;
+        newAutoFilledFields.add('portfolio');
+      }
+    }
+
+    // Fill summary if available
+    if (extractedData.summary) {
+      newResumeData.summary = extractedData.summary;
+      newAutoFilledFields.add('summary');
+    }
+
+    // Fill education
+    if (extractedData.education && Array.isArray(extractedData.education) && extractedData.education.length > 0) {
+      newResumeData.education = extractedData.education.map((edu: any) => ({
+        institution: edu.institution || '',
+        degree: edu.degree || '',
+        field: edu.field || '',
+        graduationYear: edu.graduation_year || '',
+        cgpa: edu.cgpa || ''
+      }));
+      newAutoFilledFields.add('education');
+    }
+
+    // Fill experience
+    if (extractedData.experience && Array.isArray(extractedData.experience) && extractedData.experience.length > 0) {
+      newResumeData.experience = extractedData.experience.map((exp: any) => ({
+        title: exp.title || '',
+        company: exp.company || '',
+        duration: exp.duration || '',
+        description: exp.description || ''
+      }));
+      newAutoFilledFields.add('experience');
+    }
+
+    // Fill skills
+    if (extractedData.skills) {
+      if (extractedData.skills.technical && Array.isArray(extractedData.skills.technical) && extractedData.skills.technical.length > 0) {
+        newResumeData.skills.technical = extractedData.skills.technical.join(', ');
+        newAutoFilledFields.add('technicalSkills');
+      }
+      if (extractedData.skills.soft && Array.isArray(extractedData.skills.soft) && extractedData.skills.soft.length > 0) {
+        newResumeData.skills.collaboration = extractedData.skills.soft.join(', ');
+        newAutoFilledFields.add('softSkills');
+      }
+    }
+
+    // Fill projects
+    if (extractedData.projects && Array.isArray(extractedData.projects) && extractedData.projects.length > 0) {
+      newResumeData.projects = extractedData.projects.map((proj: any) => ({
+        name: proj.name || '',
+        description: proj.description || '',
+        technologies: proj.technologies || []
+      }));
+      newAutoFilledFields.add('projects');
+    }
+
+    // Fill achievements
+    if (extractedData.achievements && Array.isArray(extractedData.achievements) && extractedData.achievements.length > 0) {
+      newResumeData.achievements = extractedData.achievements.join('\n');
+      newAutoFilledFields.add('achievements');
+    }
+
+    setResumeData(newResumeData);
+    setAutoFilledFields(newAutoFilledFields);
+    
+    const filledCount = newAutoFilledFields.size;
+    toast.success(`Resume data extracted! ${filledCount} sections auto-filled.`);
+  };
+
+  // Debug logging
+  useEffect(() => {
+    console.log('ResumeBuilder auth state:', { token: !!token, isAuthLoading, isAuthenticated });
+  }, [token, isAuthLoading]);
+
+  // Fetch resumes
+  const { data: resumes, isLoading, error } = useQuery({
+    queryKey: ['resumes', isAuthenticated],
+    queryFn: resumeAPI.getResumes,
+    enabled: isAuthenticated, // Only fetch if user is authenticated
+    onSuccess: (data) => {
+      console.log('Resumes API response:', data);
+      console.log('Type of resumes:', typeof data, Array.isArray(data));
+      console.log('Resumes data structure:', JSON.stringify(data, null, 2));
+    },
+    onError: (error) => {
+      console.error('Failed to fetch resumes:', error);
+      toast.error('Failed to load resumes');
+    }
+  });
+
+  // Upload resume mutation
+  const uploadResumeMutation = useMutation({
+    mutationFn: (file: File) => resumeAPI.uploadResume(file),
+    onSuccess: (data) => {
+      console.log('Upload mutation success data:', data);
+      
+      // Handle parsed data if available
+      if (data?.resume?.extracted_data) {
+        const extractedData = data.resume.extracted_data;
+        console.log('Parsed resume data:', extractedData);
+        
+        // Fill form fields with extracted data
+        fillFormWithParsedData(extractedData);
+        
+        // Show completion percentage
+        if (data.resume.completion_percentage) {
+          toast.success(`Resume ${data.resume.completion_percentage}% complete`);
+        }
+      } else {
+        console.log('No extracted data found in response:', data);
+      }
+      
+      // Refresh the resumes list
+      queryClient.invalidateQueries({ queryKey: ['resumes'] });
+      toast.success('Resume uploaded successfully!');
+    },
+    onError: (error: any) => {
+      console.error('Upload mutation error:', error);
+      const errorMessage = error.message || error.response?.data?.message || 'Failed to upload resume';
+      toast.error(errorMessage);
+    },
+  });
+
+  // Delete resume mutation
+  const deleteResumeMutation = useMutation({
+    mutationFn: (id: string) => resumeAPI.deleteResume(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['resumes'] });
+      toast.success('Resume deleted successfully!');
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || error.response?.data?.message || 'Failed to delete resume';
+      toast.error(errorMessage);
+    },
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!isAuthenticated) {
+        toast.error('Please log in to upload resumes');
+        return;
+      }
+      uploadResumeMutation.mutate(file);
+    }
+  };
+
+  // AI Resume Builder mutation
+  const generateResumeMutation = useMutation({
+    mutationFn: (data: any) => resumeAPI.generateResume(data),
+    onSuccess: (data) => {
+      toast.success('AI Resume generated successfully!');
+      if (data?.content) {
+        // Fill form with AI generated content
+        fillFormWithParsedData(data.content);
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || error.response?.data?.message || 'Failed to generate resume';
+      toast.error(errorMessage);
+    },
+  });
+
+  const handleAIResumeBuilder = () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to use AI Resume Builder');
+      return;
+    }
+    
+    // Use current form data to generate resume
+    const currentData = {
+      personalInfo: resumeData.personalInfo,
+      summary: resumeData.summary,
+      skills: resumeData.skills,
+      achievements: resumeData.achievements
+    };
+    
+    generateResumeMutation.mutate(currentData);
+  };
+
+  const handleDownload = async (resume: Resume) => {
+    try {
+      const response = await fetch(resume.fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = resume.fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast.error('Failed to download resume');
+    }
+  };
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-100 mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check authentication
+  if (!isAuthenticated && !isAuthLoading) {
+    console.log('Showing authentication required screen');
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-semibold text-slate-100">Authentication Required</h1>
+          <p className="text-slate-400">Please log in to access the Resume Builder.</p>
+          <Link to="/login">
+            <Button className="bg-slate-100 text-slate-900 hover:bg-white">
+              Go to Login
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10 lg:flex-row lg:px-10 lg:py-12">
@@ -19,6 +305,69 @@ const ResumeBuilder = () => {
             <p className="text-sm text-slate-400">
               Your changes autosave. Export a polished PDF once every section meets the completion checklist.
             </p>
+            {(uploadResumeMutation.isPending || generateResumeMutation.isPending) && (
+              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-300"></div>
+                {uploadResumeMutation.isPending ? 'Parsing resume with AI...' : 'Generating AI resume...'}
+              </div>
+            )}
+            {autoFilledFields.size > 0 && (
+              <div className="flex items-center gap-2 text-sm text-green-400">
+                <Sparkles className="h-4 w-4" />
+                {autoFilledFields.size} fields auto-filled from resume
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-100">Your Resumes</h3>
+            {isLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-100 mx-auto"></div>
+                <p className="mt-2 text-xs text-slate-400">Loading resumes...</p>
+              </div>
+            ) : error ? (
+              <p className="text-xs text-red-400">Error loading resumes. Please try again.</p>
+            ) : !Array.isArray(resumes) || resumes?.length === 0 ? (
+              <p className="text-xs text-slate-400">No resumes uploaded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {resumes?.map((resume: Resume) => (
+                  <div key={resume.id} className="rounded-lg border border-slate-800 bg-slate-950/70 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-slate-400" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-100">{resume.fileName}</p>
+                          <p className="text-xs text-slate-400">
+                            {resume.aiGenerated ? 'AI Generated' : 'Uploaded'} • {new Date(resume.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDownload(resume)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteResumeMutation.mutate(resume.id)}
+                          disabled={deleteResumeMutation.isPending}
+                          className="h-7 px-2 text-xs text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
@@ -44,16 +393,29 @@ const ResumeBuilder = () => {
           </div>
 
           <div className="space-y-3">
-            <Button className="w-full justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white">
-              <Download className="h-4 w-4" />
-              Export PDF preview
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadResumeMutation.isPending}
+              className="w-full justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white"
+            >
+              <Upload className="h-4 w-4" />
+              {uploadResumeMutation.isPending ? 'Uploading...' : 'Upload Resume'}
             </Button>
             <Button
               variant="outline"
+              onClick={handleAIResumeBuilder}
+              disabled={generateResumeMutation.isPending}
               className="w-full justify-center gap-2 rounded-xl border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
             >
-              <Upload className="h-4 w-4" />
-              Import existing résumé
+              <Sparkles className="h-4 w-4" />
+              {generateResumeMutation.isPending ? 'Generating...' : 'AI Resume Builder'}
             </Button>
           </div>
 
@@ -123,8 +485,15 @@ const ResumeBuilder = () => {
                       </Label>
                       <Input
                         id="full-name"
+                        value={resumeData.personalInfo.fullName}
+                        onChange={(e) => setResumeData(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, fullName: e.target.value }
+                        }))}
                         placeholder="Aditi Sharma"
-                        className="border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
+                        className={`border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300 ${
+                          autoFilledFields.has('fullName') ? 'ring-2 ring-green-500/50 bg-green-950/20' : ''
+                        }`}
                       />
                     </div>
                     <div className="space-y-2">
@@ -134,8 +503,15 @@ const ResumeBuilder = () => {
                       <Input
                         id="email"
                         type="email"
+                        value={resumeData.personalInfo.email}
+                        onChange={(e) => setResumeData(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, email: e.target.value }
+                        }))}
                         placeholder="aditi.sharma@nthuniv.edu"
-                        className="border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
+                        className={`border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300 ${
+                          autoFilledFields.has('email') ? 'ring-2 ring-green-500/50 bg-green-950/20' : ''
+                        }`}
                       />
                     </div>
                     <div className="space-y-2">
@@ -144,6 +520,11 @@ const ResumeBuilder = () => {
                       </Label>
                       <Input
                         id="phone"
+                        value={resumeData.personalInfo.phone}
+                        onChange={(e) => setResumeData(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, phone: e.target.value }
+                        }))}
                         placeholder="+91 98765 43210"
                         className="border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
                       />
@@ -154,6 +535,11 @@ const ResumeBuilder = () => {
                       </Label>
                       <Input
                         id="location"
+                        value={resumeData.personalInfo.location}
+                        onChange={(e) => setResumeData(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, location: e.target.value }
+                        }))}
                         placeholder="Bengaluru, India"
                         className="border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
                       />
@@ -164,6 +550,11 @@ const ResumeBuilder = () => {
                       </Label>
                       <Input
                         id="portfolio"
+                        value={resumeData.personalInfo.portfolio}
+                        onChange={(e) => setResumeData(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, portfolio: e.target.value }
+                        }))}
                         placeholder="https://linkedin.com/in/aditisharma"
                         className="border-slate-800 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
                       />
@@ -188,6 +579,8 @@ const ResumeBuilder = () => {
                   <Textarea
                     id="summary"
                     rows={6}
+                    value={resumeData.summary}
+                    onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
                     placeholder="• Final-year Computer Science student with hands-on experience in ML-driven analytics.\n• Led a 4-member team to build a placement insights dashboard adopted across campus.\n• Seeking AI Product roles combining user research with data-backed decision making."
                     className="mt-4 border-slate-800 bg-slate-950/80 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
                   />
@@ -323,6 +716,18 @@ const ResumeBuilder = () => {
                       <div key={category} className="space-y-2">
                         <Label className="text-slate-200">{category}</Label>
                         <Input
+                          value={
+                            category === "Technical" ? resumeData.skills.technical :
+                            category === "Analytics" ? resumeData.skills.analytics :
+                            resumeData.skills.collaboration
+                          }
+                          onChange={(e) => setResumeData(prev => ({
+                            ...prev,
+                            skills: {
+                              ...prev.skills,
+                              [category.toLowerCase()]: e.target.value
+                            }
+                          }))}
                           placeholder={
                             category === "Technical"
                               ? "Python, TensorFlow, React, Node.js"
@@ -406,6 +811,8 @@ const ResumeBuilder = () => {
                   </p>
                   <Textarea
                     rows={6}
+                    value={resumeData.achievements}
+                    onChange={(e) => setResumeData(prev => ({ ...prev, achievements: e.target.value }))}
                     placeholder="• Winner, Smart India Hackathon 2024 · AI-driven student analytics module.\n• President, University Product Club · Led community of 180+ students.\n• AWS Certified Cloud Practitioner · Issued Aug 2024."
                     className="mt-4 border-slate-800 bg-slate-950/80 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:ring-slate-300"
                   />

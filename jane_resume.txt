@@ -1,0 +1,25 @@
+JANE SMITH
+Software Engineer
+Email: jane.smith@email.com | Phone: (555) 987-6543
+Location: New York, NY
+
+EXPERIENCE
+Senior Software Engineer at TechCorp Inc. (2021-Present)
+- Developed React applications serving 50K+ users
+- Implemented REST APIs using Node.js and Express
+
+Software Engineer at StartupXYZ (2019-2021)
+- Built full-stack features using React, Node.js, and PostgreSQL
+- Increased code coverage from 45% to 85%
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Technology, 2019
+GPA: 3.7/4.0
+
+SKILLS
+JavaScript, React, Node.js, Python, PostgreSQL, AWS
+
+PROJECTS
+E-commerce Platform - React, Node.js, PostgreSQL
+Task Management App - React Native, Firebase
