@@ -2,10 +2,13 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://nthplace-skyrocket-api.vercel.app/api' : 'http://localhost:3000/api');
 
-// Debug logging
+// Debug logging - Cache bust: 2025-11-18-11:15
+console.log('=== API Configuration Debug ===');
 console.log('Environment:', import.meta.env.MODE);
 console.log('API Base URL:', API_BASE_URL);
 console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('Is Production:', import.meta.env.PROD);
+console.log('=== End Debug ===');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
